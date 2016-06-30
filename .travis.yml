@@ -1,48 +1,55 @@
 language: cpp
 sudo: required
+dist: trusty
 compiler:
 - gcc
+- clang
+os:
+- linux
+- osx
+matrix:
+  allow_failures:
+    - os: linux
+      compiler: clang
+addons:
+  apt:
+    sources:
+      # Both needed for clang 3.7
+      - llvm-toolchain-precise-3.7
+      - ubuntu-toolchain-r-test
+    packages:
+    - clang-3.7
+    - libcrypto++-dev
+    - libfuse-dev
 install:
-- wget https://raw.githubusercontent.com/smessmer/travis-utils/master/update_gcc_version.sh
-  && chmod +x update_gcc_version.sh
-  && ./update_gcc_version.sh 4.8
-  && rm update_gcc_version.sh
-- sudo apt-get install libfuse-dev
-# This is needed for packaging 7z distribution packages
-- sudo apt-get install software-properties-common && sudo add-apt-repository ppa:george-edison55/precise-backports -y && sudo apt-get update
-- sudo apt-get install cmake cmake-data rpm
+# Use new clang
+- if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
+# Detect number of CPU cores
+- export NUMCORES=`grep -c ^processor /proc/cpuinfo` && if [ ! -n "$NUMCORES" ]; then export NUMCORES=`sysctl -n hw.ncpu`; fi
+- echo Using $NUMCORES cores
+# Install dependencies
+- if [ "${TRAVIS_OS_NAME}" == "linux" ]; then ./travis.install_boost.sh; fi
+- if [ "${TRAVIS_OS_NAME}" == "osx" ]; then brew upgrade boost && brew install cryptopp osxfuse; fi
+# Install run_with_fuse.sh
+- mkdir cmake
+- cd cmake
+- wget https://raw.githubusercontent.com/smessmer/travis-utils/master/run_with_fuse.sh
+- chmod +x run_with_fuse.sh
 - cmake --version
 #  Use /dev/urandom when /dev/random is accessed, because travis doesn't have enough entropy
 - sudo cp -a /dev/urandom /dev/random
-before_script:
-- wget https://raw.githubusercontent.com/smessmer/travis-utils/master/setup_biicode_project.sh
-  && chmod +x setup_biicode_project.sh
-  && ./setup_biicode_project.sh
-  && rm setup_biicode_project.sh
 script:
-#The configure line is needed as a workaround for the following link, otherwise we wouldn't need "bii configure" at all because "bii build" calls it: http://forum.biicode.com/t/error-could-not-find-the-following-static-boost-libraries-boost-thread/374
-- bii cpp:configure || bii cpp:configure
-# Build cryfs executable
-- bii cpp:build -- -j2
-# Build and run test cases
-- bii cpp:build --target messmer_cryfs_test_main -- -j2
-- wget https://raw.githubusercontent.com/smessmer/travis-utils/master/run_with_fuse.sh
-  && chmod +x run_with_fuse.sh
-  && ./run_with_fuse.sh "./bin/messmer_cryfs_test_main"
-  && rm run_with_fuse.sh
-# Make distribution packages
-- bii clean
-- bii cpp:configure -D CMAKE_BUILD_TYPE=Release
-- bii build -- -j2
-- cd bii/build/messmer_cryfs && make package && cd ../../..
-after_success:
-- bii user ${BII_USERNAME} -p ${BII_PASSWORD}
-- bii publish
-#deploy:
-#  provider: biicode
-#  user: ${BII_USERNAME}
-#  password:
-#    secure: ${BII_PASSWORD}
-#  on:
-#    branch: develop
-
+- cmake .. -DBUILD_TESTING=on -DCMAKE_BUILD_TYPE=Debug
+- make -j$NUMCORES
+- ./test/gitversion/gitversion-test
+- ./test/cpp-utils/cpp-utils-test
+# TODO Also run on osx once fixed
+- if [ "${TRAVIS_OS_NAME}" == "linux" ]; then ./run_with_fuse.sh ./test/fspp/fspp-test || exit 1; fi
+- ./test/parallelaccessstore/parallelaccessstore-test
+- ./test/blockstore/blockstore-test
+- ./test/blobstore/blobstore-test
+# TODO Also run on osx once fixed
+- if [ "${TRAVIS_OS_NAME}" == "linux" ]; then ./test/cryfs/cryfs-test || exit 1; fi
+- if [ "${TRAVIS_OS_NAME}" == "linux" ]; then ./test/cryfs-cli/cryfs-cli-test || exit 1; fi
+after_script:
+- rm run_with_fuse.sh

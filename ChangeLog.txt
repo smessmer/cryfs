@@ -1,18 +1,101 @@
+Version 0.9.5
+---------------
+Fixed Bugs:
+* Fixed a bug that prevented mounting a file system on Mac OS X.
+* File system operations correctly update the timestamps (access time, modification time and status change time).
+* Reacts correctly to fsync() and fdatasync() syscalls by flushing the corresponding data to the disk.
+
+Improvements:
+* When mounting an old file system, CryFS will ask before migrating it to the newest version.
+* Operating system tools like the mount command or /proc/self/mountinfo report correct file system type and also report the base directory.
+* Compatibility with GCC 6
+
+Version 0.9.4
+---------------
+Improvements:
+* Ciphertext blocks are split into subdirectories (before, all were on top level) to reduce number of files per directory. Some unix tools don't work well with directories with too many entries.
+
+Fixed Bugs:
+* Renaming a file to an existing file (i.e. overwriting an existing file) didn't free the allocated memory for the overwritten file
+* Renaming a file to an existing file could hurt an invariant in the directory layout (directory entries have to be sorted) and doing so could cause files to seemingly disappear.
+* Fix a potential deadlock in the cache
+
+Compatibility:
+* The generated .deb packages work for any Ubuntu/Debian based distribution, but will not install the package source for automatic updates if it's an unsupported operating system.
+
+Version 0.9.3
+---------------
+New Features:
+* The ciphertext block size is configurable. You can use the "--blocksize" command line argument.
+  If not specified, CryFS will ask you for a block size when creating a file system.
+* It's easier for tools and scripts to use CryFS:
+  If an environment variable CRYFS_FRONTEND=noninteractive is set, we don't ask for options
+  (but take default values for everything that's not specified on command line).
+  Furthermore, in noninteractive mode, we won't ask for password confirmation when creating a file system.
+  The password only has to be sent once to stdin.
+* You can disable the automatic update check by setting CRYFS_NO_UPDATE_CHECK=true in your environment.
+
+Fixed Bugs:
+* Building CryFS from the GitHub tarball (i.e. when there is no .git directory present) works.
+* A bug in the fstat implementation caused problems with some text editors (e.g. nano) falsely thinking a file changed since they opened it.
+* When trying to rename a file to an already existing file name, a bug deleted it instead.
+* Rename operation allows overwriting existing files, as specified in the rename(2) man page.
+
+Compatibility:
+* The generated .deb packages for Debian also work for the Devuan operating system.
+
+Version 0.9.2
+---------------
+* Experimental support for installing CryFS on Mac OS X using homebrew
+  (0.9.2 is not released for Linux)
+
+Version 0.9.1
+---------------
+* Report file system usage statistics to the operating system (e.g. amount of space used). This information can be queried using the 'df' tool on linux. See https://github.com/cryfs/cryfs/commit/68acc27e88ff5209ca55ddb4e91f5a449d77fb54
+* Use stronger scrypt parameters when generating the config file key from the user password. This makes it a bit more secure, but also takes a bit longer to load a file system. See https://github.com/cryfs/cryfs/commit/7f1493ab9210319cab008e71d4ee8f4d7d920f39
+* Fix a bug where deleting a non-empty directory could leave some blocks over. See https://github.com/cryfs/cryfs/commit/df041ac84511e4560c4f099cd8cc089d08e05737
+
+Version 0.9.0
+---------------
+  (warning) file systems created with earlier CryFS versions are incompatible with this release.
+* Fully support file access times
+* Fix: Password is read from stdin, not from glibc getpass(). This enables external tools (e.g. GUIs) to pass in the password without problems.
+* Remove --extpass parameter, because that encourages tool writers to do bad things like storing a password in a file and using --extpass="cat filename".
+  The password can now be passed in to stdin without problems, so tools should use that.
+* Works with zuluMount GUI, https://mhogomchungu.github.io/zuluCrypt/
+* Introduce version flags for file system entities to allow future CryFS versions to be backwards-compatible even if the format changes.
+* (for developers) New git repository layout. All subrepositories have been merged to one directory.
+* (for developers) Using CMake instead of biicode as build system.
+
+Version 0.8.6
+---------------
+* Fix a deadlock that was caused when a very high load of parallel resize operations was issued, see https://github.com/cryfs/cryfs/issues/3
+* Fix a bug that prevented deleting symlinks, see https://github.com/cryfs/cryfs/issues/2
+* Gracefully accept modifications to the file access times instead of failing, although they're not stored yet (they will be stored in 0.9.0). This should fix https://github.com/cryfs/cryfs/issues/4
+
+Version 0.8.5
+---------------
+* Fix package manager warning when installing the .deb package
+* Offer a default configuration when creating new filesystems
+* If the given base or mount directory doesn't exist, offer to create them
+
 Version 0.8.4
 ---------------
+* Offering .deb packages for Debian and Ubuntu
 * Compatibility with 32bit systems
+* Support files larger than 4GB
 
 Version 0.8.3
 ---------------
-* Ask for password confirmation when creating new filesystem.
+* Ask for password confirmation when creating new filesystem
 * Check for new CryFS versions and ask the user to update if a new version is available
 * Implemented a mechanism that can show warnings about security bugs to users of a certain CryFS version. Let's hope this won't be necessary ;)
 * Compatibility with GCC 4.8 (that allows compiling on Ubuntu 14.04 for example)
 
 Version 0.8.2
 ---------------
-* Mount directory, base directory, logfile and config file can be specified as relative paths.
-* Improved error messages.
+* Mount directory, base directory, logfile and config file can be specified as relative paths
+* Improved error messages
 
 Version 0.8.1
 ---------------

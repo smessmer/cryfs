@@ -1,32 +1,9 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+umltest.inner.sh
+umltest.status
+/build
+/cmake
+/.idea
+*~
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Biicode directory
-bii
-bin
+src/gitversion/*.pyc
+src/gitversion/__pycache__
