@@ -5,12 +5,12 @@ See [https://www.cryfs.org](https://www.cryfs.org).
 Install latest release
 ======================
 
-Easy install (Ubuntu and Debian)
+Easy install (Ubuntu 17.04+, Debian 9+)
 --------------------------------
 
-    wget -O - https://www.cryfs.org/install.sh | sudo bash
+    sudo apt-get install cryfs
 
-Manual install (Ubuntu)
+Manual install (older Ubuntu)
 -----------------------
 
     # Add apt key
@@ -23,7 +23,7 @@ Manual install (Ubuntu)
     sudo apt-get update
     sudo apt-get install cryfs
 
-Manual install (Debian)
+Manual install (older Debian)
 -----------------------
     # Add apt key
     wget -O - https://www.cryfs.org/apt.key | sudo apt-key add -
